@@ -62,6 +62,8 @@ tbody tr.sel{background:#1f2a3a}
 .rs{padding:2px 7px;margin-left:4px;font-size:12px}
 .empty,.msg{padding:28px;text-align:center;color:var(--ink-2)}
 .detail{margin-top:14px;padding:14px 16px;display:none}
+#tbl td.drow{padding:0;background:var(--surface);cursor:default;white-space:normal}
+#tbl td.drow .detail{margin:6px 0 10px;border:0;box-shadow:none}
 .detail.open{display:block}
 .detail h2{font-size:16px;margin:0}
 .dhead{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -130,7 +132,7 @@ dialog p{color:var(--ink-2);margin:6px 0}
   <div class="msg" id="msg" hidden></div>
 </div>
 
-<section class="panel detail" id="detail" aria-live="polite"></section>
+<div id="park"><section class="panel detail" id="detail" aria-live="polite"></section></div>
 <div class="missing" id="missing"></div>
 
 <dialog id="dlg">
@@ -262,6 +264,17 @@ function filtered(){
   return a;
 }
 function render(){
+  $('park').appendChild($('detail'));
+  try{ render0(); }finally{ placeDetail(); }
+}
+function placeDetail(){
+  const el=$('detail'); document.querySelectorAll('#rows tr.drow').forEach(r=>{ if(!r.contains(el)) r.remove(); });
+  if(el.closest('tr.drow')||!el.classList.contains('open')||!view.sel) return;
+  const tr=document.querySelector('#rows tr[data-t="'+view.sel+'"]'); if(!tr) return;
+  const d=document.createElement('tr'); d.className='drow'; d.innerHTML='<td class="drow" colspan="'+tr.children.length+'"></td>';
+  tr.after(d); d.firstChild.appendChild(el);
+}
+function render0(){
   const win=view.win;
   const ok=ROWS.filter(x=>x.r);
   const up=ok.filter(x=>x.r.trend===1), dn=ok.filter(x=>x.r.trend===-1);
@@ -305,7 +318,7 @@ const crosshair={id:'crosshair',afterDatasetsDraw(ch){
 function openDetail(tk){
   view.sel=tk; render();
   const x=ROWS.find(r=>r.tk===tk); if(!x) return;
-  const el=$('detail'); el.classList.add('open');
+  const el=$('detail'); el.classList.add('open'); placeDetail();
   const r=x.r;
   el.innerHTML=`<div class="dhead"><h2>${esc(tk)} · ${esc(x.nm)}</h2>
     <div class="legend" style="margin:0">

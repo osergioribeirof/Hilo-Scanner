@@ -39,7 +39,7 @@ SIGNALS_FILE = ROOT / "docs" / "signals.json"
 STATE_FILE = ROOT / "state.json"
 
 TZ = ZoneInfo("America/Sao_Paulo")
-KEEP_BARS = 260          # candles guardados no data.json (dashboard calcula em cima disso)
+KEEP_BARS = 500          # candles guardados no data.json (~2 anos; o dashboard e a calculadora usam isso)
 MARKET_CLOSE_OK = time(17, 30)   # antes disso, o candle de "hoje" ainda pode estar incompleto
 MAX_PERIOD = 200
 EPS = 1e-9

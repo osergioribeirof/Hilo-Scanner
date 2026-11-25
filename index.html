@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HiLo Scanner · Ibovespa</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#121211; --surface:#1a1a19; --surface-2:#222221; --line:#33332f; --grid:#2b2b28;
+  --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#8d8c82;
+  --price:#3987e5;            /* série "fechamento" */
+  --up:#0ca30c; --down:#e66767; /* status: alta / baixa (sempre com ícone + rótulo) */
+  --warn:#fab219; --accent:#3987e5;
+  --radius:10px;
+  font-family: system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{padding:20px 16px 60px;max-width:1280px;margin:0 auto;font-size:14px;line-height:1.45}
+h1{font-size:20px;margin:0}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:#55554f}
+button:focus-visible,input:focus-visible,select:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.on{background:#25344a;border-color:var(--accent)}
+input[type=number],input[type=text],input[type=password],select{
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 9px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.sub{color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.head-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--surface)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.tile .k{color:var(--ink-3);font-size:12px}
+.tile .v{font-size:28px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
+.tile .n{color:var(--ink-3);font-size:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.spacer{flex:1}
+label.inl{display:inline-flex;gap:6px;align-items:center;color:var(--ink-2);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:860px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid)}
+th{position:sticky;top:0;background:var(--surface);color:var(--ink-3);font-weight:500;font-size:12px;cursor:pointer;user-select:none}
+th:hover{color:var(--ink)}
+th.l,td.l{text-align:left}
+td.num{font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.sel{background:#1f2a3a}
+.nm{color:var(--ink-3);max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.tk{font-weight:650}
+.badge{display:inline-flex;align-items:center;gap:5px;font-weight:600;font-size:12.5px;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+.badge.up{color:var(--up);border-color:#1f5a1f}
+.badge.dn{color:var(--down);border-color:#6a3030}
+.pos{color:var(--up)} .neg{color:var(--down)}
+.new{color:var(--warn);font-size:11.5px;margin-left:6px}
+.per{width:66px;text-align:right}
+.per.ov{border-color:var(--accent)}
+.rs{padding:2px 7px;margin-left:4px;font-size:12px}
+.empty,.msg{padding:28px;text-align:center;color:var(--ink-2)}
+.detail{margin-top:14px;padding:14px 16px;display:none}
+.detail.open{display:block}
+.detail h2{font-size:16px;margin:0}
+.dhead{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--ink-2);font-size:12.5px;margin:6px 0 8px}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px}
+.chartbox{position:relative;height:340px}
+.missing{margin-top:16px;color:var(--ink-3);font-size:12.5px}
+.missing b{color:var(--ink-2)}
+dialog{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;max-width:520px;width:calc(100% - 32px);padding:18px 20px}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{margin:0 0 6px}
+dialog p{color:var(--ink-2);margin:6px 0}
+.f{display:grid;gap:4px;margin:10px 0}
+.f span{color:var(--ink-3);font-size:12px}
+.f input{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.note{font-size:12.5px;color:var(--ink-3)}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>HiLo Scanner · Ibovespa <span class="chip" style="vertical-align:middle">Diário</span></h1>
+    <div class="sub" id="sub">Carregando…</div>
+  </div>
+  <div class="head-actions">
+    <label class="inl">Período padrão
+      <input id="defPer" type="number" min="1" max="200" step="1" class="per" aria-label="Período padrão do HiLo">
+    </label>
+    <span class="chip" id="saveChip" role="status">—</span>
+    <button id="btnCfg" type="button">⚙ Salvamento</button>
+  </div>
+</header>
+
+<section class="tiles" id="tiles" aria-label="Resumo"></section>
+
+<div class="toolbar">
+  <div class="seg" role="group" aria-label="Filtro de tendência" id="seg">
+    <button type="button" data-f="all" class="on">Todas</button>
+    <button type="button" data-f="up">▲ Em alta</button>
+    <button type="button" data-f="dn">▼ Em baixa</button>
+    <button type="button" data-f="new">Viraram recentemente</button>
+  </div>
+  <label class="inl">até <input id="win" type="number" min="0" max="60" value="3" class="per" aria-label="Janela de viradas recentes em candles"> candles</label>
+  <span class="spacer"></span>
+  <input id="q" type="text" placeholder="Buscar ticker ou empresa" aria-label="Buscar" style="min-width:210px">
+</div>
+
+<div class="panel tablewrap">
+  <table id="tbl">
+    <thead><tr>
+      <th class="l" data-s="tk">Ticker</th>
+      <th class="l" data-s="nm">Empresa</th>
+      <th data-s="close">Fech. (R$)</th>
+      <th data-s="chg">Dia</th>
+      <th class="l" data-s="trend">Tendência</th>
+      <th data-s="age" title="Candles desde a última virada (0 = virou no último candle)">Há (candles)</th>
+      <th data-s="line">Linha HiLo</th>
+      <th data-s="dist" title="Distância do fechamento até a linha HiLo">Dist.</th>
+      <th data-s="period">Período</th>
+      <th class="l" style="cursor:default">Últimos 40</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="msg" id="msg" hidden></div>
+</div>
+
+<section class="panel detail" id="detail" aria-live="polite"></section>
+<div class="missing" id="missing"></div>
+
+<dialog id="dlg">
+  <h3>Onde salvar os períodos</h3>
+  <p>Cada ajuste de período é salvo <b>na hora neste navegador</b>. Para o <b>aviso por e-mail</b> usar os mesmos períodos, o arquivo <code>docs/config.json</code> do seu repositório precisa ser atualizado: informe um token do GitHub e o dashboard faz isso sozinho a cada ajuste.</p>
+  <div class="f"><span>Repositório (dono/nome)</span><input id="ghRepo" type="text" placeholder="seu-usuario/hilo-scanner" autocomplete="off"></div>
+  <div class="f"><span>Branch</span><input id="ghBranch" type="text" value="main" autocomplete="off"></div>
+  <div class="f"><span>Token (fine-grained, só este repositório, permissão Contents: Read and write)</span><input id="ghToken" type="password" autocomplete="off"></div>
+  <p class="note">O token fica guardado apenas neste navegador.</p>
+  <div class="row">
+    <button type="button" id="ghSave">Salvar configuração</button>
+    <button type="button" id="ghClear">Remover token</button>
+    <button type="button" id="dlCfg">Baixar config.json</button>
+    <button type="button" id="discard" title="Apaga os ajustes guardados neste navegador e volta ao config.json do repositório">Descartar ajustes locais</button>
+    <button type="button" id="dlgClose" style="margin-left:auto">Fechar</button>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+/* ============================================================ HiLo (igual ao Python) */
+function hilo(h,l,c,n){
+  const size=c.length, hi=new Array(size).fill(null), lo=new Array(size).fill(null);
+  for(let i=n-1;i<size;i++){
+    let sh=0,sl=0;
+    for(let k=i-n+1;k<=i;k++){sh+=h[k];sl+=l[k];}
+    hi[i]=sh/n; lo[i]=sl/n;
+  }
+  const trend=new Array(size).fill(0), line=new Array(size).fill(null);
+  let cur=0;
+  for(let i=n;i<size;i++){
+    /* EPS: empate exato (fechamento == média) não é virada; mesmo critério do Python */
+    if(c[i]-hi[i-1]>1e-9) cur=1; else if(lo[i-1]-c[i]>1e-9) cur=-1;
+    trend[i]=cur;
+    if(cur===1) line[i]=lo[i-1]; else if(cur===-1) line[i]=hi[i-1];
+  }
+  return {trend,line};
+}
+function analyze(s,n){
+  if(s.c.length<n+3) return null;
+  const {trend,line}=hilo(s.h,s.l,s.c,n), last=s.c.length-1, cur=trend[last];
+  if(cur===0) return null;
+  let i=last, age=0;
+  while(i>0 && trend[i-1]===cur){age++;i--;}
+  const pc=s.c[last-1];
+  return {trend:cur,line:line[last],close:s.c[last],chg:pc?(s.c[last]/pc-1)*100:null,
+          dist:(s.c[last]/line[last]-1)*100,age,flip:s.d[i],period:n,_t:trend,_l:line};
+}
+
+/* ============================================================ estado */
+const LS_CFG='hilo.cfg.v1', LS_GH='hilo.gh.v1';
+let DATA=null, CFG={default_period:20,periods:{},updated_at:0}, GH=null, SYNC='local';
+let view={f:'all',q:'',win:3,sort:'age',dir:1,sel:null}, ROWS=[], chart=null;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const nf=(v,d=2)=>v==null?'—':v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dt=iso=>iso?iso.split('-').reverse().join('/'):'—';
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+const periodOf=t=>{const v=Number(CFG.periods[t]);return Number.isInteger(v)&&v>=1&&v<=200?v:CFG.default_period};
+
+/* ============================================================ salvar */
+function cleanCfg(){
+  const periods={}; Object.keys(CFG.periods).sort().forEach(k=>{periods[k]=CFG.periods[k]});
+  return {default_period:CFG.default_period,periods,updated_at:CFG.updated_at};
+}
+function setChip(){
+  const m={local:'● Salvo neste navegador',sync:'● Sincronizando com o GitHub…',git:'● Salvo no GitHub',err:'● Erro ao sincronizar (salvo só neste navegador)'};
+  $('saveChip').textContent=m[SYNC];
+}
+let syncTimer=null;
+function persist(){
+  CFG.updated_at=Date.now();
+  lsSet(LS_CFG,cleanCfg());
+  if(GH&&GH.token&&GH.repo){SYNC='sync';setChip();clearTimeout(syncTimer);syncTimer=setTimeout(pushGit,1200);}
+  else{SYNC='local';setChip();}
+}
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+async function pushGit(){
+  try{
+    const api=`https://api.github.com/repos/${GH.repo}/contents/docs/config.json`;
+    const hd={Authorization:`Bearer ${GH.token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+    let sha; const g=await fetch(`${api}?ref=${encodeURIComponent(GH.branch||'main')}`,{headers:hd});
+    if(g.ok) sha=(await g.json()).sha; else if(g.status!==404) throw new Error('GET '+g.status);
+    const body={message:'config: períodos do HiLo',content:b64(JSON.stringify(cleanCfg(),null,2)+'\n'),branch:GH.branch||'main'};
+    if(sha) body.sha=sha;
+    const p=await fetch(api,{method:'PUT',headers:{...hd,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!p.ok) throw new Error('PUT '+p.status);
+    SYNC='git';
+  }catch(e){console.error(e);SYNC='err';}
+  setChip();
+}
+
+/* ============================================================ cálculo / tabela */
+function compute(){
+  ROWS=[];
+  for(const [tk,s] of Object.entries(DATA.tickers)){
+    const r=analyze(s,periodOf(tk));
+    ROWS.push({tk,nm:s.n,s,r});
+  }
+}
+function spark(s,r){
+  const c=s.c.slice(-40), mn=Math.min(...c), mx=Math.max(...c), w=96, h=26;
+  const pts=c.map((v,i)=>`${(i/(c.length-1)*w).toFixed(1)},${(h-1-(mx===mn?0.5:(v-mn)/(mx-mn))*(h-2)).toFixed(1)}`).join(' ');
+  const col=r?(r.trend===1?'var(--up)':'var(--down)'):'var(--ink-3)';
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+}
+function filtered(){
+  const q=view.q.trim().toLowerCase(), win=view.win;
+  let a=ROWS.filter(x=>{
+    if(q&&!(x.tk.toLowerCase().includes(q)||x.nm.toLowerCase().includes(q))) return false;
+    if(!x.r) return view.f==='all';
+    if(view.f==='up') return x.r.trend===1;
+    if(view.f==='dn') return x.r.trend===-1;
+    if(view.f==='new') return x.r.age<=win;
+    return true;
+  });
+  const key=view.sort, d=view.dir;
+  const val=x=>key==='tk'?x.tk:key==='nm'?x.nm:x.r?(key==='trend'?x.r.trend:x.r[key]):null;
+  a.sort((p,q2)=>{
+    const A=val(p),B=val(q2);
+    if(A==null&&B==null) return p.tk.localeCompare(q2.tk);
+    if(A==null) return 1; if(B==null) return -1;
+    const c=typeof A==='string'?A.localeCompare(B,'pt-BR'):A-B;
+    return (c||p.tk.localeCompare(q2.tk))*d;
+  });
+  return a;
+}
+function render(){
+  const win=view.win;
+  const ok=ROWS.filter(x=>x.r);
+  const up=ok.filter(x=>x.r.trend===1), dn=ok.filter(x=>x.r.trend===-1);
+  const nu=up.filter(x=>x.r.age<=win).length, nd=dn.filter(x=>x.r.age<=win).length;
+  $('tiles').innerHTML=
+    tile('▲ Em alta',up.length,`de ${ok.length} analisadas`)+
+    tile('▼ Em baixa',dn.length,`de ${ok.length} analisadas`)+
+    tile('Viraram p/ alta',nu,`nos últimos ${win} candles`)+
+    tile('Viraram p/ baixa',nd,`nos últimos ${win} candles`);
+  const a=filtered();
+  $('rows').innerHTML=a.map(x=>{
+    const r=x.r, ov=x.tk in CFG.periods;
+    const tr=r?(r.trend===1?'<span class="badge up">▲ ALTA</span>':'<span class="badge dn">▼ BAIXA</span>'):'<span class="badge">sem dados suficientes</span>';
+    const fresh=r&&r.age<=win?`<span class="new">${r.age===0?'virou agora':'recente'}</span>`:'';
+    return `<tr data-t="${esc(x.tk)}" class="${view.sel===x.tk?'sel':''}" tabindex="0">
+      <td class="l tk">${esc(x.tk)}</td><td class="l nm">${esc(x.nm)}</td>
+      <td class="num">${r?nf(r.close):'—'}</td>
+      <td class="num ${r&&r.chg>=0?'pos':'neg'}">${r&&r.chg!=null?(r.chg>=0?'+':'')+nf(r.chg)+'%':'—'}</td>
+      <td class="l">${tr}${fresh}</td>
+      <td class="num">${r?r.age:'—'}</td>
+      <td class="num">${r?nf(r.line):'—'}</td>
+      <td class="num">${r?nf(r.dist)+'%':'—'}</td>
+      <td><input class="per ${ov?'ov':''}" type="number" min="1" max="200" step="1" value="${periodOf(x.tk)}" data-p="${esc(x.tk)}" aria-label="Período do HiLo de ${esc(x.tk)}">${ov?`<button class="rs" type="button" data-r="${esc(x.tk)}" title="Voltar ao período padrão" aria-label="Voltar ${esc(x.tk)} ao período padrão">↺</button>`:''}</td>
+      <td class="l">${spark(x.s,r)}</td></tr>`;
+  }).join('');
+  $('msg').hidden=a.length>0; if(!a.length) $('msg').textContent='Nenhuma ação neste filtro.';
+  document.querySelectorAll('#tbl th[data-s]').forEach(th=>{
+    const on=th.dataset.s===view.sort;
+    th.setAttribute('aria-sort',on?(view.dir===1?'ascending':'descending'):'none');
+    th.textContent=th.textContent.replace(/ [▲▼]$/,'')+(on?(view.dir===1?' ▲':' ▼'):'');
+  });
+}
+const tile=(k,v,n)=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`;
+
+/* ============================================================ detalhe + gráfico */
+const crosshair={id:'crosshair',afterDatasetsDraw(ch){
+  const a=ch.tooltip&&ch.tooltip.getActiveElements&&ch.tooltip.getActiveElements();
+  if(!a||!a.length) return; const x=a[0].element.x, {top,bottom}=ch.chartArea, c=ch.ctx;
+  c.save();c.strokeStyle='#8d8c82';c.lineWidth=1;c.setLineDash([3,3]);c.beginPath();c.moveTo(x,top);c.lineTo(x,bottom);c.stroke();c.restore();
+}};
+function openDetail(tk){
+  view.sel=tk; render();
+  const x=ROWS.find(r=>r.tk===tk); if(!x) return;
+  const el=$('detail'); el.classList.add('open');
+  const r=x.r;
+  el.innerHTML=`<div class="dhead"><h2>${esc(tk)} · ${esc(x.nm)}</h2>
+    <div class="legend" style="margin:0">
+      ${r?`<span>${r.trend===1?'<span class="badge up">▲ ALTA</span>':'<span class="badge dn">▼ BAIXA</span>'}</span>
+      <span>virou em ${dt(r.flip)} (há ${r.age} candles)</span>`:''}
+      <button type="button" id="dClose">Fechar</button></div></div>
+    <div class="legend">
+      <span><i style="border-color:var(--price)"></i>Fechamento</span>
+      <span><i style="border-color:var(--up)"></i>HiLo em alta (linha cheia)</span>
+      <span><i style="border-color:var(--down);border-top-style:dashed"></i>HiLo em baixa (tracejada)</span>
+      <span>▲ virada p/ alta · ▼ virada p/ baixa</span>
+      <span>Período: <b>${periodOf(tk)}</b></span></div>
+    <div class="chartbox"><canvas id="cv" aria-label="Gráfico de ${esc(tk)} com fechamento e HiLo Activator" role="img"></canvas></div>`;
+  $('dClose').onclick=()=>{view.sel=null;el.classList.remove('open');render();};
+  if(typeof Chart==='undefined'){el.querySelector('.chartbox').innerHTML='<div class="msg">Não foi possível carregar o Chart.js (CDN). Verifique a conexão.</div>';return;}
+  if(!r){el.querySelector('.chartbox').innerHTML='<div class="msg">Histórico insuficiente para este período.</div>';return;}
+  const N=Math.min(140,x.s.c.length), from=x.s.c.length-N;
+  const labels=x.s.d.slice(from).map(dt), close=x.s.c.slice(from), line=r._l.slice(from), tr=r._t.slice(from);
+  /* marcadores alinhados aos candles (null onde não há virada) — não usar {x,y} no eixo de categorias */
+  const flipsUp=new Array(N).fill(null), flipsDn=new Array(N).fill(null);
+  for(let i=1;i<N;i++){ if(tr[i]===1&&tr[i-1]===-1) flipsUp[i]=line[i]; if(tr[i]===-1&&tr[i-1]===1) flipsDn[i]=line[i]; }
+  const cs=getComputedStyle(document.documentElement), C=n=>cs.getPropertyValue(n).trim();
+  if(chart) chart.destroy();
+  chart=new Chart($('cv'),{type:'line',
+    data:{labels,datasets:[
+      {label:'Fechamento',data:close,borderColor:C('--price'),borderWidth:1.8,pointRadius:0,pointHoverRadius:4,tension:0,order:2},
+      {label:'HiLo',data:line,borderWidth:2,pointRadius:0,pointHoverRadius:0,tension:0,spanGaps:false,order:1,
+        segment:{borderColor:c=>tr[c.p1DataIndex]===1?C('--up'):C('--down'),borderDash:c=>tr[c.p1DataIndex]===1?[]:[6,4]}},
+      {label:'Virou p/ alta',data:flipsUp,showLine:false,pointStyle:'triangle',pointRadius:6,pointHoverRadius:7,backgroundColor:C('--up'),borderColor:C('--surface'),borderWidth:2,order:0},
+      {label:'Virou p/ baixa',data:flipsDn,showLine:false,pointStyle:'triangle',rotation:180,pointRadius:6,pointHoverRadius:7,backgroundColor:C('--down'),borderColor:C('--surface'),borderWidth:2,order:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#222221',borderColor:'#33332f',borderWidth:1,titleColor:'#f0efec',bodyColor:'#c3c2b7',
+          filter:i=>i.datasetIndex<2,
+          callbacks:{label:c=>c.datasetIndex===0?` Fechamento: R$ ${nf(c.parsed.y)}`:` HiLo (${tr[c.dataIndex]===1?'alta':'baixa'}): R$ ${nf(c.parsed.y)}`}}},
+      scales:{x:{type:'category',grid:{color:C('--grid')},ticks:{color:C('--ink-3'),maxTicksLimit:8,autoSkip:true},border:{color:C('--line')}},
+              y:{grace:'4%',grid:{color:C('--grid')},ticks:{color:C('--ink-3'),callback:v=>nf(v)},border:{display:false}}}},
+    plugins:[crosshair]});
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ============================================================ eventos */
+function setPeriod(tk,v){
+  v=Math.round(Number(v));
+  if(!Number.isFinite(v)||v<1) v=CFG.default_period; v=Math.min(200,v);
+  if(v===CFG.default_period) delete CFG.periods[tk]; else CFG.periods[tk]=v;
+  persist(); compute(); render(); if(view.sel===tk) openDetail(tk);
+}
+$('rows').addEventListener('change',e=>{const t=e.target.dataset&&e.target.dataset.p; if(t) setPeriod(t,e.target.value);});
+$('rows').addEventListener('click',e=>{
+  if(e.target.dataset&&e.target.dataset.p) return;
+  const rs=e.target.closest('[data-r]'); if(rs){setPeriod(rs.dataset.r,CFG.default_period);return;}
+  const tr=e.target.closest('tr[data-t]'); if(tr) openDetail(tr.dataset.t);
+});
+$('rows').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('tr[data-t]')) openDetail(e.target.dataset.t); });
+$('defPer').addEventListener('change',e=>{
+  let v=Math.min(200,Math.max(1,Math.round(Number(e.target.value)||20)));
+  CFG.default_period=v; e.target.value=v;
+  for(const k of Object.keys(CFG.periods)) if(CFG.periods[k]===v) delete CFG.periods[k];
+  persist(); compute(); render(); if(view.sel) openDetail(view.sel);
+});
+$('seg').addEventListener('click',e=>{const b=e.target.closest('button[data-f]'); if(!b) return;
+  view.f=b.dataset.f; document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x===b)); render();});
+$('win').addEventListener('change',e=>{view.win=Math.max(0,Math.min(60,Math.round(Number(e.target.value)||0)));e.target.value=view.win;render();});
+$('q').addEventListener('input',e=>{view.q=e.target.value;render();});
+document.querySelector('#tbl thead').addEventListener('click',e=>{
+  const th=e.target.closest('th[data-s]'); if(!th) return;
+  const k=th.dataset.s; if(view.sort===k) view.dir*=-1; else {view.sort=k;view.dir=1;} render();
+});
+/* diálogo de salvamento */
+$('btnCfg').onclick=()=>{ $('ghRepo').value=GH?GH.repo:''; $('ghBranch').value=GH?GH.branch:'main'; $('ghToken').value=GH?GH.token:''; $('dlg').showModal(); };
+$('dlgClose').onclick=()=>$('dlg').close();
+$('ghSave').onclick=()=>{
+  const repo=$('ghRepo').value.trim(), token=$('ghToken').value.trim(), branch=$('ghBranch').value.trim()||'main';
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)||!token){alert('Informe o repositório no formato dono/nome e o token.');return;}
+  GH={repo,branch,token}; lsSet(LS_GH,GH); $('dlg').close(); persist();
+};
+$('ghClear').onclick=()=>{GH=null;lsDel(LS_GH);SYNC='local';setChip();$('dlg').close();};
+$('dlCfg').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(cleanCfg(),null,2)+'\n'],{type:'application/json'}));
+  a.download='config.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$('discard').onclick=()=>{ if(confirm('Descartar os ajustes guardados neste navegador e voltar ao config.json do repositório?')){lsDel(LS_CFG);location.reload();} };
+
+/* ============================================================ início */
+(async function init(){
+  GH=lsGet(LS_GH);
+  let remote=null;
+  try{
+    const [dr,cr]=await Promise.all([fetch('data.json?'+Date.now()),fetch('config.json?'+Date.now())]);
+    if(!dr.ok) throw new Error('data '+dr.status);
+    DATA=await dr.json(); if(cr.ok) remote=await cr.json();
+  }catch(e){
+    $('sub').textContent='Sem dados ainda.';
+    $('msg').hidden=false;
+    $('msg').innerHTML='O arquivo <code>data.json</code> ainda não foi gerado. No GitHub, abra <b>Actions → HiLo Scanner → Run workflow</b> para a primeira execução e recarregue esta página.';
+    return;
+  }
+  const local=lsGet(LS_CFG);
+  const pick=(local&&(!remote||(local.updated_at||0)>(remote.updated_at||0)))?local:remote;
+  if(pick){CFG={default_period:Number(pick.default_period)||20,periods:pick.periods||{},updated_at:pick.updated_at||0};}
+  SYNC=GH&&GH.token?'git':'local'; setChip();
+  $('defPer').value=CFG.default_period;
+  const age=Math.round((Date.now()-new Date(DATA.last_bar+'T12:00:00'))/864e5);
+  $('sub').innerHTML=`Último candle: <b>${dt(DATA.last_bar)}</b> · atualizado em ${new Date(DATA.generated_at).toLocaleString('pt-BR')}`
+    +(age>4?' · <span style="color:var(--warn)">⚠ dados com mais de 4 dias</span>':'')
+    +' · HiLo = média de N máximas/mínimas; vira quando o fechamento cruza a média oposta do candle anterior';
+  if(DATA.missing&&DATA.missing.length) $('missing').innerHTML=`<b>Sem dados no Yahoo:</b> ${DATA.missing.map(esc).join(', ')}. Corrija o código em <code>tickers.json</code> (campo opcional <code>"yahoo"</code>) ou remova.`;
+  compute(); render();
+})();
+</script>
+</body>
+</html>

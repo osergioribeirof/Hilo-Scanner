@@ -1,0 +1,68 @@
+name: HiLo Scanner
+
+on:
+  schedule:
+    # 21:40 UTC = 18:40 em Brasilia (B3 ja fechou). Segunda a sexta.
+    - cron: "40 21 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: "Só enviar um e-mail de teste (não roda o scanner)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hilo-scanner
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      DASHBOARD_URL: ${{ vars.DASHBOARD_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: E-mail de teste
+        if: ${{ inputs.test_email }}
+        run: python hilo_scanner.py --test-email
+
+      - name: Rodar scanner
+        if: ${{ !inputs.test_email }}
+        id: scan
+        run: python hilo_scanner.py
+        continue-on-error: true
+
+      - name: Salvar dados no repositório
+        if: ${{ !inputs.test_email }}
+        run: |
+          git config user.name  "hilo-scanner[bot]"
+          git config user.email "hilo-scanner[bot]@users.noreply.github.com"
+          git add docs/data.json docs/signals.json state.json
+          if git diff --cached --quiet; then
+            echo "nada para commitar"
+          else
+            git commit -m "dados: candle $(date -u +%F)"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Falhar se o scanner falhou
+        if: ${{ !inputs.test_email && steps.scan.outcome == 'failure' }}
+        run: |
+          echo "O scanner terminou com erro (veja o passo 'Rodar scanner')."
+          exit 1

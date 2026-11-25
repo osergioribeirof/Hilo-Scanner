@@ -1,0 +1,314 @@
+[
+ {
+  "t": "VALE3",
+  "n": "Vale"
+ },
+ {
+  "t": "ITUB4",
+  "n": "Itaú Unibanco"
+ },
+ {
+  "t": "PETR4",
+  "n": "Petrobras PN"
+ },
+ {
+  "t": "PETR3",
+  "n": "Petrobras ON"
+ },
+ {
+  "t": "AXIA3",
+  "n": "Axia Energia ON"
+ },
+ {
+  "t": "BBDC4",
+  "n": "Bradesco PN"
+ },
+ {
+  "t": "B3SA3",
+  "n": "B3"
+ },
+ {
+  "t": "SBSP3",
+  "n": "Sabesp"
+ },
+ {
+  "t": "ITSA4",
+  "n": "Itaúsa"
+ },
+ {
+  "t": "ABEV3",
+  "n": "Ambev"
+ },
+ {
+  "t": "BPAC11",
+  "n": "BTG Pactual"
+ },
+ {
+  "t": "WEGE3",
+  "n": "WEG"
+ },
+ {
+  "t": "BBAS3",
+  "n": "Banco do Brasil"
+ },
+ {
+  "t": "EMBJ3",
+  "n": "Embraer"
+ },
+ {
+  "t": "EQTL3",
+  "n": "Equatorial"
+ },
+ {
+  "t": "ENEV3",
+  "n": "Eneva"
+ },
+ {
+  "t": "PRIO3",
+  "n": "Prio"
+ },
+ {
+  "t": "CPLE3",
+  "n": "Copel"
+ },
+ {
+  "t": "RENT3",
+  "n": "Localiza"
+ },
+ {
+  "t": "RDOR3",
+  "n": "Rede D'Or"
+ },
+ {
+  "t": "VBBR3",
+  "n": "Vibra"
+ },
+ {
+  "t": "GGBR4",
+  "n": "Gerdau"
+ },
+ {
+  "t": "UGPA3",
+  "n": "Ultrapar"
+ },
+ {
+  "t": "SUZB3",
+  "n": "Suzano"
+ },
+ {
+  "t": "VIVT3",
+  "n": "Telefônica Brasil"
+ },
+ {
+  "t": "RADL3",
+  "n": "Raia Drogasil"
+ },
+ {
+  "t": "BBDC3",
+  "n": "Bradesco ON"
+ },
+ {
+  "t": "BBSE3",
+  "n": "BB Seguridade"
+ },
+ {
+  "t": "CMIG4",
+  "n": "Cemig"
+ },
+ {
+  "t": "TOTS3",
+  "n": "Totvs"
+ },
+ {
+  "t": "RAIL3",
+  "n": "Rumo"
+ },
+ {
+  "t": "TIMS3",
+  "n": "TIM"
+ },
+ {
+  "t": "ENGI11",
+  "n": "Energisa"
+ },
+ {
+  "t": "AXIA6",
+  "n": "Axia Energia PNB"
+ },
+ {
+  "t": "LREN3",
+  "n": "Lojas Renner"
+ },
+ {
+  "t": "MOTV3",
+  "n": "Motiva"
+ },
+ {
+  "t": "KLBN11",
+  "n": "Klabin"
+ },
+ {
+  "t": "ALOS3",
+  "n": "Allos"
+ },
+ {
+  "t": "EGIE3",
+  "n": "Engie Brasil"
+ },
+ {
+  "t": "ASAI3",
+  "n": "Assaí"
+ },
+ {
+  "t": "MBRF3",
+  "n": "Marfrig"
+ },
+ {
+  "t": "ISAE4",
+  "n": "ISA Energia"
+ },
+ {
+  "t": "CXSE3",
+  "n": "Caixa Seguridade"
+ },
+ {
+  "t": "SMFT3",
+  "n": "Smart Fit"
+ },
+ {
+  "t": "CSMG3",
+  "n": "Copasa"
+ },
+ {
+  "t": "SANB11",
+  "n": "Santander Brasil"
+ },
+ {
+  "t": "BRAV3",
+  "n": "Brava Energia"
+ },
+ {
+  "t": "MULT3",
+  "n": "Multiplan"
+ },
+ {
+  "t": "GOAU4",
+  "n": "Metalúrgica Gerdau"
+ },
+ {
+  "t": "PSSA3",
+  "n": "Porto Seguro"
+ },
+ {
+  "t": "CSAN3",
+  "n": "Cosan"
+ },
+ {
+  "t": "TAEE11",
+  "n": "Taesa"
+ },
+ {
+  "t": "NATU3",
+  "n": "Natura"
+ },
+ {
+  "t": "CPFE3",
+  "n": "CPFL Energia"
+ },
+ {
+  "t": "CMIN3",
+  "n": "CSN Mineração"
+ },
+ {
+  "t": "HYPE3",
+  "n": "Hypera"
+ },
+ {
+  "t": "FLRY3",
+  "n": "Fleury"
+ },
+ {
+  "t": "CYRE3",
+  "n": "Cyrela"
+ },
+ {
+  "t": "USIM5",
+  "n": "Usiminas"
+ },
+ {
+  "t": "BRAP4",
+  "n": "Bradespar"
+ },
+ {
+  "t": "IGTI11",
+  "n": "Iguatemi"
+ },
+ {
+  "t": "CSNA3",
+  "n": "CSN"
+ },
+ {
+  "t": "CURY3",
+  "n": "Cury"
+ },
+ {
+  "t": "COGN3",
+  "n": "Cogna"
+ },
+ {
+  "t": "DIRR3",
+  "n": "Direcional"
+ },
+ {
+  "t": "POMO4",
+  "n": "Marcopolo"
+ },
+ {
+  "t": "HAPV3",
+  "n": "Hapvida"
+ },
+ {
+  "t": "BRKM5",
+  "n": "Braskem"
+ },
+ {
+  "t": "VIVA3",
+  "n": "Vivara"
+ },
+ {
+  "t": "YDUQ3",
+  "n": "Yduqs"
+ },
+ {
+  "t": "CEAB3",
+  "n": "C&A"
+ },
+ {
+  "t": "MRVE3",
+  "n": "MRV"
+ },
+ {
+  "t": "MGLU3",
+  "n": "Magazine Luiza"
+ },
+ {
+  "t": "AZZA3",
+  "n": "Azzas 2154"
+ },
+ {
+  "t": "BEEF3",
+  "n": "Minerva"
+ },
+ {
+  "t": "VAMO3",
+  "n": "Vamos"
+ },
+ {
+  "t": "AURE3",
+  "n": "Auren"
+ },
+ {
+  "t": "TEND3",
+  "n": "Tenda"
+ }
+]

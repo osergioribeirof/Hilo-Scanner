@@ -82,6 +82,43 @@ dialog p{color:var(--ink-2);margin:6px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 .note{font-size:12.5px;color:var(--ink-3)}
 .sr{position:absolute;left:-9999px}
+[hidden]{display:none!important}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:9px 14px;color:var(--ink-2);font-weight:600;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.cbox{padding:16px 18px;margin-bottom:14px}
+.cbox h2{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-3);margin:0 0 12px;font-weight:600}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.cgrid .f{margin:0}
+.cgrid input{width:100%}
+.cload{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cload input{flex:1 1 90px;min-width:90px}
+.cload button{white-space:nowrap}
+@media(max-width:560px){.cgrid .f:first-child{grid-column:1/-1}}
+#c-paste{width:100%;min-height:104px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px;font:12px ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+#c-paste::placeholder{color:var(--ink-3)}
+.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:650}
+.pri:hover{filter:brightness(1.08);border-color:var(--accent)}
+.pri:disabled{opacity:.45;cursor:default;filter:none}
+.filebtn{position:relative;overflow:hidden;display:inline-block}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+#c-status{font-size:12.5px;color:var(--ink-3);min-height:18px;margin-top:8px}
+#c-status.err{color:var(--down)} #c-status.ok{color:var(--up)}
+.best{display:flex;flex-wrap:wrap;gap:12px 30px;align-items:center;border-color:var(--accent)}
+.best .tag{font-size:11px;letter-spacing:1.2px;color:var(--accent);font-weight:700;text-transform:uppercase}
+.best .big{font-size:34px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.best .big small{font-size:13px;color:var(--ink-3);font-weight:400}
+.stat .lbl{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.4px}
+.stat .val{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.applybar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.calcwrap{max-height:520px;overflow:auto}
+#c-tbl{min-width:1000px}
+#c-tbl th{top:0}
+#c-tbl tr.top td{background:rgba(250,178,25,.09)}
+#c-tbl tr.pick td{background:#1f2a3a;box-shadow:inset 0 0 0 0 transparent}
+#c-tbl tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.legend i.sw{display:inline-block;width:10px;height:10px;border:0;border-radius:2px;margin-right:6px;vertical-align:-1px}
 </style>
 </head>
 <body>
@@ -99,6 +136,12 @@ dialog p{color:var(--ink-2);margin:6px 0}
   </div>
 </header>
 
+<nav class="tabs" role="tablist" aria-label="Seções">
+  <button type="button" role="tab" id="tabBtnScan" data-tab="scan" aria-selected="true" aria-controls="tab-scan">Scanner</button>
+  <button type="button" role="tab" id="tabBtnCalc" data-tab="calc" aria-selected="false" aria-controls="tab-calc" tabindex="-1">Calculadora de período</button>
+</nav>
+
+<div id="tab-scan" role="tabpanel" aria-labelledby="tabBtnScan">
 <section class="tiles" id="tiles" aria-label="Resumo"></section>
 
 <div class="toolbar">
@@ -134,6 +177,78 @@ dialog p{color:var(--ink-2);margin:6px 0}
 
 <div id="park"><section class="panel detail" id="detail" aria-live="polite"></section></div>
 <div class="missing" id="missing"></div>
+</div>
+
+<div id="tab-calc" role="tabpanel" aria-labelledby="tabBtnCalc" hidden>
+  <section class="panel cbox">
+    <h2>Dados do ativo</h2>
+    <div class="cgrid">
+      <div class="f"><span>Ativo</span>
+        <div class="cload"><input id="c-tk" type="text" list="c-tks" placeholder="Ex.: PETR4" autocomplete="off" autocapitalize="characters" aria-label="Ticker do ativo">
+        <button type="button" id="c-load" title="Usa os candles fechados que o scanner já baixou">Carregar do scanner</button></div></div>
+      <div class="f"><span>Capital inicial (R$)</span><input id="c-cap" type="number" value="10000" min="1"></div>
+      <div class="f"><span>Período mínimo</span><input id="c-pmin" type="number" value="1" min="1"></div>
+      <div class="f"><span>Período máximo</span><input id="c-pmax" type="number" value="80" min="1" max="300"></div>
+    </div>
+    <datalist id="c-tks"></datalist>
+    <textarea id="c-paste" aria-label="Colar dados" placeholder="Ou cole aqui os dados, com cabeçalho: Data  Máxima  Mínima  Fechamento&#10;Datas em DD/MM/AAAA, AAAA-MM-DD ou serial do Excel; separador TAB, ponto e vírgula ou vírgula."></textarea>
+    <div class="note" style="margin-top:6px">Ou envie um arquivo <code>.xlsx</code> / <code>.csv</code> com as colunas Data, Máxima, Mínima, Fechamento. Dados colados ou enviados valem mais que os do scanner e permitem históricos mais longos.</div>
+    <div class="row" style="align-items:center">
+      <label class="btn filebtn" style="padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);cursor:pointer">Escolher arquivo
+        <input type="file" id="c-file" accept=".xlsx,.xls,.csv,.txt"></label>
+      <span id="c-fname" class="note"></span>
+      <span class="spacer"></span>
+      <button type="button" class="pri" id="c-run">Gerar relatório</button>
+    </div>
+    <div id="c-status" role="status" aria-live="polite"></div>
+  </section>
+
+  <div id="c-results" hidden>
+    <section class="panel cbox best">
+      <div><div class="tag">Melhor período</div><div class="big" id="c-bP">—<small> candles</small></div></div>
+      <div class="stat"><div class="lbl">Montante final</div><div class="val" id="c-bF">—</div></div>
+      <div class="stat"><div class="lbl">% Rentabilidade</div><div class="val" id="c-bR">—</div></div>
+      <div class="stat"><div class="lbl">Operações</div><div class="val" id="c-bO">—</div></div>
+      <div class="stat"><div class="lbl">% Acertos</div><div class="val" id="c-bA">—</div></div>
+      <div class="stat"><div class="lbl">Payoff</div><div class="val" id="c-bY">—</div></div>
+      <div class="stat"><div class="lbl">Início da análise</div><div class="val" id="c-bI" style="font-size:14px">—</div></div>
+    </section>
+
+    <section class="panel cbox">
+      <h2>Aplicar no scanner</h2>
+      <div class="applybar">
+        <button type="button" class="pri" id="c-apply" disabled>Aplicar período</button>
+        <span class="note" id="c-applyinfo">Clique numa linha da tabela para escolher outro período que não o melhor.</span>
+      </div>
+    </section>
+
+    <section class="panel cbox">
+      <h2>% Rentabilidade por período</h2>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--warn)"></i>Melhor</span>
+        <span><i class="sw" style="background:var(--accent)"></i>Escolhido</span>
+        <span><i class="sw" style="background:var(--up)"></i>Positivo</span>
+        <span><i class="sw" style="background:var(--down)"></i>Negativo</span>
+      </div>
+      <div class="chartbox" style="height:230px"><canvas id="c-chart" role="img" aria-label="Rentabilidade por período do HiLo"></canvas></div>
+      <p class="note" style="margin:8px 0 0">Prefira uma região de períodos vizinhos com resultado parecido: um pico isolado costuma ser sorte do passado e tende a não se repetir.</p>
+    </section>
+
+    <section class="panel cbox">
+      <h2>Relatório completo</h2>
+      <div class="calcwrap panel">
+        <table id="c-tbl"><thead><tr>
+          <th class="l" data-k="periodo">Período</th><th data-k="inicio">Início</th><th data-k="montante_final">Montante final</th>
+          <th data-k="resultado_total">Resultado</th><th data-k="total_operacoes">Operações</th><th data-k="pos_lucro">C/ lucro</th>
+          <th data-k="pos_preju">C/ prejuízo</th><th data-k="pct_acertos">% Acertos</th><th data-k="media_ganho">Média ganho</th>
+          <th data-k="pct_erros">% Erros</th><th data-k="media_perda">Média perda</th><th data-k="pct_rent">% Rent.</th><th data-k="payoff">Payoff</th>
+        </tr></thead><tbody id="c-body"></tbody></table>
+      </div>
+      <p class="note" style="margin:8px 0 0">Entrada no fechamento do candle do sinal, sempre posicionado (compra e venda a descoberto), capital composto, sem custos. Só operações encerradas entram na conta.</p>
+    </section>
+  </div>
+</div>
+
 
 <dialog id="dlg">
   <h3>Onde salvar os períodos</h3>
@@ -324,7 +439,7 @@ function openDetail(tk){
     <div class="legend" style="margin:0">
       ${r?`<span>${r.trend===1?'<span class="badge up">▲ ALTA</span>':'<span class="badge dn">▼ BAIXA</span>'}</span>
       <span>virou em ${dt(r.flip)} (há ${r.age} candles)</span>`:''}
-      <button type="button" id="dClose">Fechar</button></div></div>
+      <button type="button" id="dCalc" title="Abre a Calculadora de período já com este ativo">🎯 Calcular período</button> <button type="button" id="dClose">Fechar</button></div></div>
     <div class="legend">
       <span><i style="border-color:var(--price)"></i>Fechamento</span>
       <span><i style="border-color:var(--up)"></i>HiLo em alta (linha cheia)</span>
@@ -332,6 +447,7 @@ function openDetail(tk){
       <span>▲ virada p/ alta · ▼ virada p/ baixa</span>
       <span>Período: <b>${periodOf(tk)}</b></span></div>
     <div class="chartbox"><canvas id="cv" aria-label="Gráfico de ${esc(tk)} com fechamento e HiLo Activator" role="img"></canvas></div>`;
+  $('dCalc').onclick=()=>window.calcOpen&&window.calcOpen(tk);
   $('dClose').onclick=()=>{view.sel=null;el.classList.remove('open');render();};
   if(typeof Chart==='undefined'){el.querySelector('.chartbox').innerHTML='<div class="msg">Não foi possível carregar o Chart.js (CDN). Verifique a conexão.</div>';return;}
   if(!r){el.querySelector('.chartbox').innerHTML='<div class="msg">Histórico insuficiente para este período.</div>';return;}
@@ -406,6 +522,262 @@ $('dlCfg').onclick=()=>{
 };
 $('discard').onclick=()=>{ if(confirm('Descartar os ajustes guardados neste navegador e voltar ao config.json do repositório?')){lsDel(LS_CFG);location.reload();} };
 
+/* ============================================================ abas + calculadora de período */
+(function(){
+const K=id=>document.getElementById(id);
+const TAB_LS='hilo.tab.v1';
+
+/* ---------- abas ---------- */
+function showTab(n){
+  if(n!=='calc') n='scan';
+  for(const k of ['scan','calc']){
+    K('tab-'+k).hidden=(k!==n);
+    const b=K('tabBtn'+(k==='scan'?'Scan':'Calc')); b.setAttribute('aria-selected',String(k===n)); b.tabIndex=k===n?0:-1;
+  }
+  try{localStorage.setItem(TAB_LS,n);}catch(e){}
+  try{history.replaceState(null,'',n==='calc'?'#calc':location.pathname+location.search);}catch(e){}
+  if(n==='calc'){ fillTickers(); if(chartC) chartC.resize(); const t=K('c-tk'); if(!t.value&&typeof view!=='undefined'&&view.sel) t.value=view.sel; updateApply(); }
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]'); if(b) showTab(b.dataset.tab);});
+document.querySelector('.tabs').addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ const cur=K('tabBtnCalc').getAttribute('aria-selected')==='true'?'calc':'scan'; showTab(cur==='calc'?'scan':'calc'); K('tabBtn'+(cur==='calc'?'Scan':'Calc')).focus(); }
+});
+
+/* ---------- leitura dos dados ---------- */
+let rows=null, results=null, shown=null, chartC=null, pick=null, best=null, sortAsc=false;
+function setStatus(m,c){const el=K('c-status'); el.textContent=m; el.className=c||'';}
+function excelSerialToDate(s){return new Date(Date.UTC(1899,11,30)+s*86400000);}
+function parseDateFlexible(v){
+  if(v instanceof Date) return v;
+  if(typeof v==='number') return excelSerialToDate(v);
+  const str=String(v).trim();
+  if(/^\d+(\.\d+)?$/.test(str)) return excelSerialToDate(parseFloat(str));
+  let m=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return new Date(Date.UTC(+m[3],+m[2]-1,+m[1]));
+  m=str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m) return new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));
+  const d=new Date(str); return isNaN(d)?null:d;
+}
+function numOf(v){
+  if(typeof v==='number') return v;
+  if(v==null) return NaN;
+  let s=String(v).trim().replace(/[^\d.,\-]/g,'');
+  const c=s.lastIndexOf(','), p=s.lastIndexOf('.');
+  if(c>-1&&p>-1) s=c>p?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'');   /* o último símbolo é o decimal */
+  else if(c>-1) s=s.replace(',','.');
+  return parseFloat(s);
+}
+function findCol(headers,cands){
+  const norm=h=>String(h).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const H=headers.map(norm);
+  for(const c of cands){const i=H.indexOf(c); if(i>-1) return i;}
+  return -1;
+}
+function rowsFromAOA(aoa){
+  if(!aoa||aoa.length<2) throw new Error('Dados insuficientes.');
+  const hd=aoa[0];
+  const iD=findCol(hd,['data','date']), iX=findCol(hd,['maxima','max','high']), iN=findCol(hd,['minima','min','low']), iC=findCol(hd,['fechamento','close','fech']);
+  if([iD,iX,iN,iC].some(i=>i===-1)) throw new Error('Não encontrei as 4 colunas (Data, Máxima, Mínima, Fechamento) no cabeçalho.');
+  const out=[];
+  for(let r=1;r<aoa.length;r++){
+    const row=aoa[r]; if(!row||row[iD]===undefined||row[iD]==='') continue;
+    const d=parseDateFlexible(row[iD]), mx=numOf(row[iX]), mn=numOf(row[iN]), cl=numOf(row[iC]);
+    if(!d||isNaN(mx)||isNaN(mn)||isNaN(cl)) continue;
+    out.push({date:d,max:mx,min:mn,close:cl});
+  }
+  out.sort((a,b)=>a.date-b.date);
+  return out;
+}
+function parsePaste(text){
+  const lines=text.trim().split(/\r?\n/).filter(l=>l.trim().length);
+  const f=lines[0], sep=f.indexOf('\t')>-1?'\t':(f.indexOf(';')>-1?';':',');
+  return rowsFromAOA(lines.map(l=>l.split(sep).map(x=>x.trim())));
+}
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise((ok,fail)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=ok; s.onerror=()=>fail(new Error('Não consegui carregar o leitor de Excel (sem internet?). Use .csv ou cole os dados.'));
+    document.head.appendChild(s);
+  });
+}
+
+/* ---------- motor do backtest (soma "pairwise" igual ao numpy, para bater com a referência em Python) ---------- */
+function pairwiseSum(a,o,n){
+  if(n<8){let s=0; for(let i=0;i<n;i++) s+=a[o+i]; return s;}
+  else if(n<=128){
+    let r0=a[o],r1=a[o+1],r2=a[o+2],r3=a[o+3],r4=a[o+4],r5=a[o+5],r6=a[o+6],r7=a[o+7], i=8;
+    while(i+8<=n){r0+=a[o+i];r1+=a[o+i+1];r2+=a[o+i+2];r3+=a[o+i+3];r4+=a[o+i+4];r5+=a[o+i+5];r6+=a[o+i+6];r7+=a[o+i+7];i+=8;}
+    let res=((r0+r1)+(r2+r3))+((r4+r5)+(r6+r7));
+    while(i<n){res+=a[o+i];i++;}
+    return res;
+  }
+  let n2=Math.floor(n/2); n2-=n2%8;
+  return pairwiseSum(a,o,n2)+pairwiseSum(a,o+n2,n-n2);
+}
+function runPeriod(rs,N,cap0){
+  const n=rs.length; if(n<=N) return null;
+  const mx=rs.map(r=>r.max), mn=rs.map(r=>r.min), fe=rs.map(r=>r.close);
+  const H=new Array(n).fill(null), J=new Array(n).fill(null), Kk=new Float64Array(n);
+  for(let i=0;i<n;i++){
+    if(i>=N){
+      const aMax=pairwiseSum(mx,i-N,N)/N, aMin=pairwiseSum(mn,i-N,N)/N;
+      if(fe[i]>=aMax) H[i]='COMPRA'; else if(fe[i]<=aMin) H[i]='VENDE'; else H[i]=H[i-1];
+    }else H[i]=null;
+    const pH=i>0?H[i-1]:null, mudou=H[i]!==pH, Ii=mudou?fe[i]:null, pJ=i>0?J[i-1]:null;
+    J[i]=(Ii!==null)?Ii:pJ;
+    if(J[i]!==null&&pJ!==null){
+      if(pH==='COMPRA') Kk[i]=(J[i]-pJ)/pJ; else if(pH==='VENDE') Kk[i]=(pJ-J[i])/pJ; else Kk[i]=0;
+    }else Kk[i]=0;
+  }
+  let cap=cap0,sG=0,nG=0,sP=0,nP=0;
+  for(let i=0;i<n;i++){ cap=(1+Kk[i])*cap; if(Kk[i]>0){sG+=Kk[i];nG++;} else if(Kk[i]<0){sP+=Kk[i];nP++;} }
+  const ops=nG+nP, mG=nG?sG/nG:NaN, mP=nP?sP/nP:NaN;
+  return {periodo:N,montante_inicial:cap0,montante_final:cap,resultado_total:cap-cap0,inicio:rs[0].date,total_operacoes:ops,
+    pos_lucro:nG,pos_preju:nP,pct_acertos:ops?nG/ops:NaN,media_ganho:mG,pct_erros:ops?nP/ops:NaN,media_perda:mP,
+    pct_rent:(cap-cap0)/cap0,payoff:(nG&&nP)?Math.abs(mG/mP):NaN};
+}
+function runSweep(rs,a,b,cap){const o=[]; for(let N=a;N<=b;N++){const r=runPeriod(rs,N,cap); if(r) o.push(r);} return o;}
+window._calcEngine={runPeriod,pairwiseSum,rowsFromAOA,parsePaste,numOf};   /* usado nos testes */
+
+/* ---------- formatação ---------- */
+const fBRL=v=>isNaN(v)?'—':v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fPct=v=>isNaN(v)?'—':(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const fNum=v=>isNaN(v)?'—':v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fDate=d=>d.toLocaleDateString('pt-BR',{timeZone:'UTC'});
+const cls=v=>v>=0?'pos':'neg';
+
+/* ---------- scanner -> calculadora ---------- */
+function fillTickers(){
+  const dl=K('c-tks'); if(dl.children.length||typeof DATA==='undefined'||!DATA) return;
+  dl.innerHTML=Object.keys(DATA.tickers).sort().map(t=>`<option value="${t}">${esc(DATA.tickers[t].n||'')}</option>`).join('');
+}
+function tkValue(){return K('c-tk').value.trim().toUpperCase();}
+function fromScanner(tk){
+  const s=(typeof DATA!=='undefined'&&DATA)?DATA.tickers[tk]:null;
+  if(!s) throw new Error(tk?`"${tk}" não está nos dados do scanner. Escolha um da lista ou cole os dados.`:'Digite um ticker.');
+  const n=s.live?s.c.length-1:s.c.length;      /* só candles fechados */
+  const out=[]; for(let i=0;i<n;i++) out.push({date:parseDateFlexible(s.d[i]),max:s.h[i],min:s.l[i],close:s.c[i]});
+  return out;
+}
+K('c-load').onclick=()=>{
+  try{
+    const tk=tkValue(); rows=fromScanner(tk);
+    K('c-paste').value=''; K('c-file').value=''; K('c-fname').textContent='';
+    setStatus(`${tk}: ${rows.length} candles fechados do scanner (${fDate(rows[0].date)} a ${fDate(rows[rows.length-1].date)}).`,'ok');
+  }catch(e){rows=null; setStatus(e.message,'err');}
+};
+K('c-tk').addEventListener('input',updateApply);
+K('c-tk').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();K('c-load').click();}});
+
+K('c-file').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  K('c-fname').textContent=f.name; K('c-paste').value='';
+  try{
+    if(/\.(csv|txt)$/i.test(f.name)){ rows=parsePaste(await f.text()); }
+    else{
+      await loadXLSX();
+      const buf=await f.arrayBuffer(), wb=XLSX.read(buf,{type:'array',cellDates:true});
+      rows=rowsFromAOA(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true}));
+    }
+    setStatus(`Arquivo lido: ${rows.length} linhas (${fDate(rows[0].date)} a ${fDate(rows[rows.length-1].date)}).`,'ok');
+  }catch(err){rows=null; setStatus('Erro ao ler arquivo: '+err.message,'err');}
+});
+K('c-paste').addEventListener('input',()=>{ if(K('c-paste').value.trim()){K('c-file').value=''; K('c-fname').textContent='';} });
+
+/* ---------- gerar ---------- */
+function run(){
+  const btn=K('c-run');
+  try{
+    let rs=rows; const pasted=K('c-paste').value.trim();
+    if(pasted) rs=parsePaste(pasted);
+    if(!rs||rs.length<5){ setStatus('Preciso de dados: carregue do scanner, cole a série (Data, Máxima, Mínima, Fechamento) ou envie um arquivo.','err'); return; }
+    const cap=parseFloat(K('c-cap').value)||10000;
+    const a=Math.max(1,parseInt(K('c-pmin').value)||1), b=Math.min(300,parseInt(K('c-pmax').value)||80);
+    if(b<a){ setStatus('O período máximo deve ser maior que o mínimo.','err'); return; }
+    btn.disabled=true; btn.textContent='Calculando…'; setStatus(`Processando ${rs.length} candles, períodos ${a} a ${b}…`,'');
+    setTimeout(()=>{
+      try{
+        const res=runSweep(rs,a,b,cap);
+        if(!res.length) setStatus('Nenhum período pôde ser calculado (série curta demais).','err');
+        else{ show(res); setStatus(`Relatório gerado${tkValue()?' — '+tkValue():''}: ${rs.length} candles, ${res.length} períodos testados.`,'ok'); }
+      }catch(e){setStatus('Erro: '+e.message,'err');}
+      btn.disabled=false; btn.textContent='Gerar relatório';
+    },30);
+  }catch(e){setStatus('Erro: '+e.message,'err');}
+}
+K('c-run').onclick=run;
+
+function show(res){
+  results=res.slice().sort((a,b)=>b.pct_rent-a.pct_rent); shown=results; best=results[0]; pick=best.periodo; sortAsc=false;
+  K('c-results').hidden=false;
+  K('c-bP').innerHTML=best.periodo+'<small> candles</small>';
+  K('c-bF').textContent=fBRL(best.montante_final);
+  const r=K('c-bR'); r.textContent=fPct(best.pct_rent); r.className='val '+cls(best.pct_rent);
+  K('c-bO').textContent=best.total_operacoes; K('c-bA').textContent=fPct(best.pct_acertos);
+  K('c-bY').textContent=fNum(best.payoff); K('c-bI').textContent=fDate(best.inicio);
+  paint(); chartDraw(); updateApply();
+}
+function paint(){
+  K('c-body').innerHTML=shown.map(r=>`<tr data-p="${r.periodo}" class="${r.periodo===best.periodo?'top':''} ${r.periodo===pick?'pick':''}" tabindex="0">
+    <td class="l num">${r.periodo}</td><td class="num">${fDate(r.inicio)}</td><td class="num">${fBRL(r.montante_final)}</td>
+    <td class="num ${cls(r.resultado_total)}">${fBRL(r.resultado_total)}</td><td class="num">${r.total_operacoes}</td>
+    <td class="num">${r.pos_lucro}</td><td class="num">${r.pos_preju}</td><td class="num">${fPct(r.pct_acertos)}</td>
+    <td class="num">${fPct(r.media_ganho)}</td><td class="num">${fPct(r.pct_erros)}</td><td class="num">${fPct(r.media_perda)}</td>
+    <td class="num ${cls(r.pct_rent)}">${fPct(r.pct_rent)}</td><td class="num">${fNum(r.payoff)}</td></tr>`).join('');
+}
+function choose(p){ pick=p; paint(); chartDraw(); updateApply(); }
+K('c-body').addEventListener('click',e=>{const tr=e.target.closest('tr[data-p]'); if(tr) choose(+tr.dataset.p);});
+K('c-body').addEventListener('keydown',e=>{ if(e.key==='Enter'){const tr=e.target.closest('tr[data-p]'); if(tr) choose(+tr.dataset.p);} });
+document.querySelector('#c-tbl thead').addEventListener('click',e=>{
+  const th=e.target.closest('th[data-k]'); if(!th||!results) return;
+  const k=th.dataset.k; sortAsc=(th.dataset.on===k)?!sortAsc:false; document.querySelectorAll('#c-tbl th').forEach(x=>delete x.dataset.on); th.dataset.on=k;
+  const key=k==='inicio'?r=>r.inicio.getTime():r=>r[k];
+  const nz=v=>isNaN(v)?-Infinity:v;
+  shown=results.slice().sort((a,b)=>sortAsc?nz(key(a))-nz(key(b)):nz(key(b))-nz(key(a))); paint();
+});
+
+/* ---------- gráfico ---------- */
+function chartDraw(){
+  if(typeof Chart==='undefined'){ return; }
+  const by=results.slice().sort((a,b)=>a.periodo-b.periodo), cs=getComputedStyle(document.documentElement), V=n=>cs.getPropertyValue(n).trim();
+  const labels=by.map(r=>r.periodo), data=by.map(r=>+(r.pct_rent*100).toFixed(2));
+  const colors=by.map(r=>r.periodo===pick?V('--accent'):r.periodo===best.periodo?V('--warn'):(r.pct_rent>=0?V('--up'):V('--down')));
+  if(chartC) chartC.destroy();
+  chartC=new Chart(K('c-chart'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:2,barPercentage:.9,categoryPercentage:.9}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>'Período '+i[0].label,label:i=>'Rentabilidade: '+i.formattedValue+'%'}}},
+      onClick:(ev,els)=>{ if(els.length) choose(by[els[0].index].periodo); },
+      scales:{x:{grid:{display:false},ticks:{color:V('--ink-3'),maxRotation:0,autoSkip:true,maxTicksLimit:20,font:{size:10}},border:{color:V('--line')}},
+              y:{grid:{color:V('--grid')},ticks:{color:V('--ink-3'),font:{size:10},callback:v=>v+'%'},border:{display:false}}}}});
+}
+
+/* ---------- aplicar no scanner ---------- */
+function updateApply(){
+  const b=K('c-apply'), info=K('c-applyinfo'); if(!b) return;
+  const tk=tkValue(), known=typeof DATA!=='undefined'&&DATA&&DATA.tickers[tk];
+  b.textContent=pick?`Aplicar período ${pick}${known?' ao '+tk:''}`:'Aplicar período';
+  b.disabled=!(results&&pick&&known);
+  if(!results) return;
+  if(known) info.textContent=`Período atual de ${tk} no scanner: ${periodOf(tk)}. Clique numa linha da tabela ou numa barra do gráfico para escolher outro que não o melhor.`;
+  else info.textContent=tk?`"${tk}" não está na lista do scanner, então não dá para aplicar.`:'Digite o ticker (da lista do scanner) para poder aplicar o período.';
+}
+K('c-apply').onclick=()=>{
+  const tk=tkValue(); if(!results||!pick||!(DATA&&DATA.tickers[tk])) return;
+  setPeriod(tk,pick);
+  updateApply(); setStatus(`Período ${pick} aplicado a ${tk} e salvo. Ele já vale no Scanner.`,'ok');
+};
+
+/* ---------- ponte com o scanner ---------- */
+window.calcOpen=function(tk){ showTab('calc'); K('c-tk').value=tk; K('c-load').click(); if(rows) run(); };
+window.calcInit=function(){ fillTickers(); updateApply(); };
+
+let start='scan';
+try{ start=(location.hash==='#calc')?'calc':(localStorage.getItem(TAB_LS)||'scan'); }catch(e){ start=(location.hash==='#calc')?'calc':'scan'; }
+showTab(start);
+})();
+
 /* ============================================================ início */
 (async function init(){
   GH=lsGet(LS_GH);
@@ -431,6 +803,7 @@ $('discard').onclick=()=>{ if(confirm('Descartar os ajustes guardados neste nave
     +' · HiLo = média de N máximas/mínimas; vira quando o fechamento cruza a média oposta do candle anterior';
   if(DATA.missing&&DATA.missing.length) $('missing').innerHTML=`<b>Sem dados no Yahoo:</b> ${DATA.missing.map(esc).join(', ')}. Corrija o código em <code>tickers.json</code> (campo opcional <code>"yahoo"</code>) ou remova.`;
   compute(); render();
+  if(window.calcInit) window.calcInit();
 })();
 </script>
 </body>
